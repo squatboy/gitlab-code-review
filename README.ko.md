@@ -1,8 +1,27 @@
-# GitLab AI Code Review
+<div align="center">
+<br/>
+<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/gitlab.svg" width="120px" alt="">
+<br/>
 
-GitLab Merge Request pipeline에서 실행되는 AI 코드 리뷰 CLI.
+# Gitlab AI Code Review
+
+
+</div>
+<br>
+<div align="left">
+
+## About
+
+GitLab Merge Request pipeline에서 Job으로 실행되는 AI 코드 리뷰.
 
 별도 리뷰 서버를 두지 않고, 각 GitLab repository의 MR pipeline job이 Docker image를 pull한 뒤 `ai-code-review` CLI를 실행한다. CLI는 GitLab API로 MR 변경 내용을 읽고 Gemini에 리뷰를 요청한 뒤, MR summary note와 added line comment를 GitLab에 작성한다.
+
+## Preview
+
+<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/814dc552-143d-4c41-986c-ceef75d04ae0" />
+<br>
+<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/24ed4f08-2ec6-4b39-b72b-ee6a108e3987" />
+
 
 ## 동작 흐름
 
@@ -37,7 +56,16 @@ ai-code-review CLI
 ```yaml
 ai-code-review:
   stage: test
-  image: ghcr.io/squatboy/gitlab-code-review:<version>
+  image: ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3
+  variables:
+    AI_REVIEW_ENABLED: "true"
+    AI_REVIEW_FORCE: "false"
+    AI_REVIEW_LANGUAGE: "ko"
+    AI_REVIEW_MODEL: "gemini-3.1-flash-lite-preview"
+    AI_REVIEW_MAX_COMMENTS: "10"
+    AI_REVIEW_MAX_COMMENTS_PER_FILE: "3"
+    AI_REVIEW_RULE_PACKS: "default"
+    AI_REVIEW_RESULT_PATH: "ai-review-result.json"
   allow_failure: true
   script:
     - ai-code-review
@@ -118,7 +146,7 @@ AI_REVIEW_API_KEY
 - 무시된 pack 이름은 리뷰 summary의 제한 항목에 표시된다.
 - 예시: `AI_REVIEW_RULE_PACKS=spring,nestjs,go-gin-echo`
 
-## 리뷰 정책
+## 현재 리뷰 정책
 
 - MR pipeline에서만 실행한다.
 - fork MR은 제외한다.
