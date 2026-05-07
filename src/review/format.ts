@@ -19,35 +19,35 @@ export function formatSummaryNote(params: {
   const lines = [
     summaryMarker(input.projectId, input.mergeRequestIid, input.headSha),
     "",
-    "## AI Code Review",
+    "## 🔎 AI Code Review",
     "",
-    `- 대상 커밋: \`${input.headSha}\``,
-    `- 리뷰 상태: 완료`,
-    `- 리뷰 파일: ${input.files.length}개`,
-    `- 라인 코멘트: ${findings.length}개`,
-    `- 제외 파일: ${input.excludedFiles.length}개`,
-    `- 버린 finding: ${rejectedFindings}개`
+    `- Target commit: \`${input.headSha}\``,
+    "- Review status: Completed",
+    `- Reviewed files: ${input.files.length}`,
+    `- Line comments: ${findings.length}`,
+    `- Excluded files: ${input.excludedFiles.length}`,
+    `- Discarded findings: ${rejectedFindings}`
   ];
 
   if (summary.length > 0) {
-    lines.push("", "### 요약", ...summary.map((item) => `- ${item}`));
+    lines.push("", "### Summary", ...summary.map((item) => `- ${item}`));
   }
 
   if (findings.length > 0) {
     lines.push(
       "",
-      "### 주요 지적",
+      "### Key findings",
       ...findings.map((finding) => `- \`${finding.path}:${finding.line}\` ${finding.title}`)
     );
   }
 
   const limits = [...input.limits];
   if (input.excludedFiles.length > 0) {
-    limits.push(`제외 파일: ${input.excludedFiles.slice(0, 20).join(", ")}`);
+    limits.push(`Excluded files: ${input.excludedFiles.slice(0, 20).join(", ")}`);
   }
 
   if (limits.length > 0) {
-    lines.push("", "### 제한", ...limits.map((item) => `- ${item}`));
+    lines.push("", "### Limits", ...limits.map((item) => `- ${item}`));
   }
 
   return lines.join("\n");
@@ -73,7 +73,7 @@ export function formatPolicyNote(params: {
   projectId: string;
   mergeRequestIid: string;
   headSha: string;
-  status: "스킵" | "제한 리뷰";
+  status: "Skipped" | "Limited review";
   reasons: string[];
 }): string {
   return [
@@ -81,10 +81,10 @@ export function formatPolicyNote(params: {
     "",
     "## AI Code Review",
     "",
-    `- 대상 커밋: \`${params.headSha}\``,
-    `- 리뷰 상태: ${params.status}`,
+    `- Target commit: \`${params.headSha}\``,
+    `- Review status: ${params.status}`,
     "",
-    "### 사유",
+    "### Reasons",
     ...params.reasons.map((reason) => `- ${reason}`)
   ].join("\n");
 }

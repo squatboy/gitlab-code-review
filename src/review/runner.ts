@@ -195,7 +195,7 @@ async function publishPolicyNote(
   const draftNoteId = await gitlab.createDraftNote(
     formatPolicyNote({
       ...params,
-      status: "스킵"
+      status: "Skipped"
     })
   );
   try {
