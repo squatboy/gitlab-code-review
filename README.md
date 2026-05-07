@@ -1,20 +1,27 @@
-# GitLab AI Code Review
+<div align="center">
+<br/>
+<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/gitlab.svg" width="120px" alt="">
+<br/>
 
-An AI code review CLI that runs in GitLab Merge Request pipelines.
+# Gitlab AI Code Review
+
+
+</div>
+<br>
+<div align="left">
+
+## About
+
+An AI code review CLI that runs as a Job in GitLab Merge Request pipelines.
 
 This project does not run a separate review server. Instead, each GitLab repository runs an MR pipeline job that pulls the Docker image and executes the `ai-code-review` CLI. The CLI reads MR changes through the GitLab API, requests a review from Gemini, and writes an MR summary note and added-line comments back to GitLab.
 
-## Current Validation Baseline
+## Preview
 
-- Validation image: `ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3`
-- Image platforms: `linux/amd64`, `linux/arm64`
-- Validation repository: `sth/code-review-test`
-- Validation method: same-project internal MR pipeline
-- Runner: `runner on k8s`
-- Runner tag: `k8s`
-- Result artifact: `ai-review-result.json`
+<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/814dc552-143d-4c41-986c-ceef75d04ae0" />
+<br>
+<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/24ed4f08-2ec6-4b39-b72b-ee6a108e3987" />
 
-Do not use the `latest` tag. Always use a pinned tag in CI.
 
 ## Execution Flow
 
@@ -58,8 +65,15 @@ Add the following job to `.gitlab-ci.yml` in the target repository.
 ai-code-review:
   stage: test
   image: ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3
-  tags:
-    - k8s
+  variables:
+    AI_REVIEW_ENABLED: "true"
+    AI_REVIEW_FORCE: "false"
+    AI_REVIEW_LANGUAGE: "en"
+    AI_REVIEW_MODEL: "gemini-3.1-flash-lite-preview"
+    AI_REVIEW_MAX_COMMENTS: "10"
+    AI_REVIEW_MAX_COMMENTS_PER_FILE: "3"
+    AI_REVIEW_RULE_PACKS: "default"
+    AI_REVIEW_RESULT_PATH: "ai-review-result.json"
   allow_failure: true
   script:
     - ai-code-review
@@ -76,7 +90,7 @@ ai-code-review:
     - when: never
 ```
 
-`tags: [k8s]` is required in the current validation environment because the runner does not accept untagged jobs. It can be removed in environments where a runner accepts untagged jobs.
+> `tags: ` option is required in the environment where the gitlab runner not accepting untagged jobs. 
 
 ## GitLab CI Variables
 
@@ -135,7 +149,7 @@ Notes:
 - Ignored rule packs are reported in the review summary limitations.
 - Example: `AI_REVIEW_RULE_PACKS=spring,nestjs,go-gin-echo`
 
-## Review Policy
+## Current Review Policy
 
 - Run only in MR pipelines.
 - Exclude fork MRs.
