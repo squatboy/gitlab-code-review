@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+ai-review-result.json
+.env
+.DS_Store
+graphify-out/
+docs/
+PLAN.md
