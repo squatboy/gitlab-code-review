@@ -111,6 +111,11 @@ async function executeReview(config: AppConfig, result: AiReviewResult): Promise
 
   result.reviewedFiles = reviewInput.files.length;
   result.excludedFiles = reviewInput.excludedFiles;
+  for (const limit of reviewInput.limits) {
+    if (!result.limitsApplied.includes(limit)) {
+      result.limitsApplied.push(limit);
+    }
+  }
 
   if (reviewInput.files.length === 0) {
     const draftNoteId = await publishPolicyNote(gitlab, {

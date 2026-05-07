@@ -4,18 +4,6 @@ GitLab Merge Request pipeline에서 실행되는 AI 코드 리뷰 CLI.
 
 별도 리뷰 서버를 두지 않고, 각 GitLab repository의 MR pipeline job이 Docker image를 pull한 뒤 `ai-code-review` CLI를 실행한다. CLI는 GitLab API로 MR 변경 내용을 읽고 Gemini에 리뷰를 요청한 뒤, MR summary note와 added line comment를 GitLab에 작성한다.
 
-## 현재 검증 기준
-
-- 검증용 image: `ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3`
-- image platform: `linux/amd64`, `linux/arm64`
-- 검증 repository: `sth/code-review-test`
-- 검증 방식: 같은 project 내부 MR pipeline
-- 실행 runner: `runner on k8s`
-- runner tag: `k8s`
-- 결과 artifact: `ai-review-result.json`
-
-`latest` tag는 사용하지 않는다. CI에서는 항상 고정 tag를 사용한다.
-
 ## 동작 흐름
 
 ```text
@@ -42,14 +30,6 @@ ai-code-review CLI
         +--> ai-review-result.json artifact 저장
 ```
 
-`script: ai-code-review`가 실행하는 경로:
-
-- `package.json`의 `bin.ai-code-review`
-- Docker image 내부 `/usr/local/bin/ai-code-review`
-- symlink 대상 `/app/dist/cli.js`
-- 소스 entrypoint `src/cli.ts`
-- 리뷰 실행 로직 `src/review/runner.ts`
-
 ## GitLab CI 적용
 
 대상 repository의 `.gitlab-ci.yml`에 아래 job을 추가한다.
@@ -57,9 +37,7 @@ ai-code-review CLI
 ```yaml
 ai-code-review:
   stage: test
-  image: ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3
-  tags:
-    - k8s
+  image: ghcr.io/squatboy/gitlab-code-review:<version>
   allow_failure: true
   script:
     - ai-code-review
@@ -76,7 +54,12 @@ ai-code-review:
     - when: never
 ```
 
-`tags: [k8s]`는 현재 검증 환경의 runner가 untagged job을 받지 않기 때문에 필요하다. 다른 환경에서 untagged job을 받을 수 있는 runner를 쓰면 제거할 수 있다.
+**runner 설정:**
+- `tags` 필드는 선택사항입니다. Runner가 untagged job을 지원하지 않으면 추가하세요.
+  ```yaml
+  tags:
+    - <your-runner-tag>
+  ```
 
 ## GitLab CI Variables
 
@@ -115,8 +98,25 @@ AI_REVIEW_API_KEY
 | `AI_REVIEW_MODEL` | `gemini-3.1-flash-lite-preview` | Gemini 모델명. |
 | `AI_REVIEW_MAX_COMMENTS` | `10` | MR 전체 line comment 최대 개수. |
 | `AI_REVIEW_MAX_COMMENTS_PER_FILE` | `3` | 파일당 line comment 최대 개수. |
-| `AI_REVIEW_RULE_PACKS` | `spring` | 적용할 rule pack. comma-separated string. |
+| `AI_REVIEW_RULE_PACKS` | `default` | 적용할 rule pack. comma-separated string. `default`는 항상 적용됨. |
 | `AI_REVIEW_RESULT_PATH` | `ai-review-result.json` | 결과 artifact 파일 경로. |
+
+지원 rule pack:
+
+- `default`: 언어/프레임워크 공통 기준(정합성, 보안, 무결성, 회귀 위험)
+- `spring`: Spring/JPA/MyBatis/REST 중심 점검
+- `node-express`: Node.js/Express API 및 미들웨어 중심 점검
+- `react-nextjs`: React/Next.js 렌더링 경계 및 계약 중심 점검
+- `python-django-fastapi`: Django/FastAPI ORM·검증·권한 중심 점검
+- `nestjs`: NestJS 모듈/DI 경계, guard/interceptor/pipe 흐름, DTO 검증, 권한 점검
+- `go-gin-echo`: Go Gin/Echo 컨텍스트 타임아웃·취소, 고루틴 안전성, 검증, API 계약 점검
+- `vue-nuxt`: Vue/Nuxt SSR-CSR 경계, hydration 불일치, 라우트 가드/인증 흐름, XSS 위험 점검
+
+동작 정책:
+
+- 알 수 없는 rule pack은 무시하고 리뷰를 계속 진행한다.
+- 무시된 pack 이름은 리뷰 summary의 제한 항목에 표시된다.
+- 예시: `AI_REVIEW_RULE_PACKS=spring,nestjs,go-gin-echo`
 
 ## 리뷰 정책
 
@@ -174,54 +174,20 @@ GitHub Actions workflow는 quality check 통과 후 GHCR에 multi-arch image를 
 
 - Pull request: `pnpm build`, `pnpm test`, `pnpm lint`, Docker build 검증만 실행하고 push하지 않는다.
 - `main` push: `ghcr.io/squatboy/gitlab-code-review:sha-<short_sha>`를 push한다.
-- `v*` tag push: `ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3` 같은 version tag만 push한다.
-- `latest`는 사용하지 않는다.
+- `v*` tag push: version tag (예: `v0.1.0`)만 push한다.
+- `latest` tag는 사용하지 않는다.
 
-현재 검증 image는 필요할 때만 수동으로 multi-arch build/push한다.
+**로컬 테스트:**
 
 ```bash
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3 \
+  -t ghcr.io/squatboy/gitlab-code-review:<version> \
   --push .
 ```
 
 manifest 확인:
 
 ```bash
-docker manifest inspect ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3
+docker manifest inspect ghcr.io/squatboy/gitlab-code-review:<version>
 ```
-
-주의:
-
-- `v0.1.0-rc1`은 최초 검증 중 runner platform 문제를 드러낸 tag다.
-- `v0.1.0-rc3`은 첫 GHCR 검증 tag다.
-- runner가 `pull_policy: IfNotPresent`만 허용하면 같은 tag 재push 후에도 노드 image cache 때문에 이전 image가 사용될 수 있다.
-- 검증 tag를 갱신할 때는 새 고정 tag를 발급한다.
-
-## MR Smoke Test
-
-1. 테스트 repository에서 feature branch를 만든다.
-2. `sample.txt` 같은 작은 파일에 한 줄만 추가한다.
-3. Draft가 아닌 MR을 생성한다.
-4. MR pipeline에서 `ai-code-review` job이 생성되는지 확인한다.
-5. job trace에서 Docker image pull과 `$ ai-code-review` 실행을 확인한다.
-6. MR summary note가 생성되는지 확인한다.
-7. finding이 있으면 added line에만 comment가 달리는지 확인한다.
-8. job artifact에서 `ai-review-result.json`을 확인한다.
-
-정책 smoke:
-
-1. 같은 MR pipeline job을 retry한다.
-   - 기대 결과: `skippedReason=duplicate_head_sha`
-2. `AI_REVIEW_FORCE=true`를 임시 CI variable로 넣고 retry한다.
-   - 기대 결과: 같은 `head_sha`도 `status=completed`
-   - 검증 후 임시 variable은 삭제한다.
-3. MR 제목을 `Draft: ...`로 바꾼 뒤 MR pipeline 생성을 시도한다.
-   - 기대 결과: rules에 의해 job이 제외된다.
-
-## 보안 주의
-
-이 MVP는 Gemini로 보내기 전 별도 secret masking을 수행하지 않는다.
-
-MR diff와 제한된 주변 context가 Gemini API로 전송될 수 있다. 해당 전송이 허용되지 않는 repository에는 이 job을 적용하지 않는다.

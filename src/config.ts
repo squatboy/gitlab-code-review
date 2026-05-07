@@ -21,7 +21,7 @@ const envSchema = z.object({
   AI_REVIEW_MAX_COMMENTS_PER_FILE: z.coerce.number().int().positive().default(3),
   AI_REVIEW_RULE_PACKS: z
     .string()
-    .default("spring")
+    .default("default")
     .transform((value) =>
       value
         .split(",")

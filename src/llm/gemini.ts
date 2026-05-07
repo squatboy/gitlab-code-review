@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ReviewInput, ReviewResponse } from "../types.js";
+import { buildRulePackPromptLines, resolveRulePacks } from "../review/rule-packs.js";
 
 const findingSchema = z.object({
   path: z.string(),
@@ -99,7 +100,10 @@ export class GeminiProvider {
   }
 }
 
-function buildPrompt(input: ReviewInput): string {
+export function buildPrompt(input: ReviewInput): string {
+  const { appliedRulePacks } = resolveRulePacks(input.rulePacks);
+  const rulePackLines = buildRulePackPromptLines(appliedRulePacks);
+
   return [
     "You are an AI code reviewer for GitLab Merge Requests.",
     "Return only JSON that matches the provided schema.",
@@ -107,7 +111,8 @@ function buildPrompt(input: ReviewInput): string {
     "Only report actionable issues. Do not praise, nitpick, or comment on style preferences.",
     "Allowed severities are critical, major, minor, nit. Do not return nit findings unless the issue is objectively important.",
     "Line findings must point only to added lines listed in each file. If unsure, put the concern in summary instead.",
-    "For Spring rule pack, prioritize transaction boundaries, JPA/MyBatis issues, REST contract bugs, authorization, sensitive logging, runtime config, and missing tests.",
+    `Apply these rule packs: ${appliedRulePacks.join(", ")}.`,
+    ...rulePackLines,
     input.summaryOnly
       ? "This MR is over the normal line-review limit. Return summary only and no line findings."
       : "Return at most the most important actionable line findings.",
