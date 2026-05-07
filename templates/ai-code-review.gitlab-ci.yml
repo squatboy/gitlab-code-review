@@ -1,6 +1,15 @@
 ai-code-review:
   stage: test
   image: ghcr.io/squatboy/gitlab-code-review:v0.1.0-rc3
+  variables:
+    AI_REVIEW_ENABLED: "true"
+    AI_REVIEW_FORCE: "false"
+    AI_REVIEW_LANGUAGE: "en"
+    AI_REVIEW_MODEL: "gemini-3.1-flash-lite-preview"
+    AI_REVIEW_MAX_COMMENTS: "10"
+    AI_REVIEW_MAX_COMMENTS_PER_FILE: "3"
+    AI_REVIEW_RULE_PACKS: "default"
+    AI_REVIEW_RESULT_PATH: "ai-review-result.json"
   allow_failure: true
   script:
     - ai-code-review

@@ -94,7 +94,7 @@ AI_REVIEW_API_KEY
 | --- | --- | --- |
 | `AI_REVIEW_ENABLED` | `true` | `false`면 job 내부에서 리뷰를 스킵한다. |
 | `AI_REVIEW_FORCE` | `false` | `true`면 같은 `head_sha`도 다시 리뷰한다. |
-| `AI_REVIEW_LANGUAGE` | `ko` | 리뷰 결과 언어. |
+| `AI_REVIEW_LANGUAGE` | `en` | 리뷰 결과 언어. 한국어는 `ko` 로 선언 |
 | `AI_REVIEW_MODEL` | `gemini-3.1-flash-lite-preview` | Gemini 모델명. |
 | `AI_REVIEW_MAX_COMMENTS` | `10` | MR 전체 line comment 최대 개수. |
 | `AI_REVIEW_MAX_COMMENTS_PER_FILE` | `3` | 파일당 line comment 최대 개수. |

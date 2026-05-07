@@ -111,7 +111,7 @@ AI_REVIEW_API_KEY
 | --- | --- | --- |
 | `AI_REVIEW_ENABLED` | `true` | If `false`, the job skips the review internally. |
 | `AI_REVIEW_FORCE` | `false` | If `true`, the same `head_sha` is reviewed again. |
-| `AI_REVIEW_LANGUAGE` | `ko` | Review result language. |
+| `AI_REVIEW_LANGUAGE` | `en` | Review result language. |
 | `AI_REVIEW_MODEL` | `gemini-3.1-flash-lite-preview` | Gemini model name. |
 | `AI_REVIEW_MAX_COMMENTS` | `10` | Maximum number of line comments per MR. |
 | `AI_REVIEW_MAX_COMMENTS_PER_FILE` | `3` | Maximum number of line comments per file. |

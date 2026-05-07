@@ -15,7 +15,7 @@ const envSchema = z.object({
   AI_REVIEW_API_KEY: z.string().optional(),
   AI_REVIEW_ENABLED: boolFromEnv,
   AI_REVIEW_FORCE: forceBoolFromEnv,
-  AI_REVIEW_LANGUAGE: z.string().default("ko"),
+  AI_REVIEW_LANGUAGE: z.string().default("en"),
   AI_REVIEW_MODEL: z.string().default("gemini-3.1-flash-lite-preview"),
   AI_REVIEW_MAX_COMMENTS: z.coerce.number().int().positive().default(10),
   AI_REVIEW_MAX_COMMENTS_PER_FILE: z.coerce.number().int().positive().default(3),
