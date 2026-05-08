@@ -30,18 +30,17 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("Use summary for review-oriented risk");
   });
 
-  it("defines the single-line suggestion contract", () => {
+  it("defines the multi-line replacement suggestion contract", () => {
     const prompt = buildPrompt(baseInput);
 
     expect(prompt).toContain(
-      "For finding.suggestion, return only a single-line replacement for the exact added line."
+      "For finding.suggestion, return only replacement code for the exact added line."
     );
     expect(prompt).toContain(
-      "Do not include Markdown fences, explanation text, or multiple lines in finding.suggestion."
+      "finding.suggestion may contain multiple replacement code lines, but it must still replace only the current added line."
     );
-    expect(prompt).toContain(
-      "Omit finding.suggestion when the exact single-line replacement is uncertain."
-    );
+    expect(prompt).toContain("Do not include Markdown fences or explanation text in finding.suggestion.");
+    expect(prompt).toContain("Omit finding.suggestion when the exact replacement code is uncertain.");
   });
 
   it("ignores unknown packs in prompt composition", () => {

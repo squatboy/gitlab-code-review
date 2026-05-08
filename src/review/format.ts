@@ -80,7 +80,6 @@ export function formatSuggestionBlock(suggestion?: string): string | undefined {
 
   const normalized = suggestion.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   if (normalized.trim().length === 0) return undefined;
-  if (normalized.includes("\n")) return undefined;
   if (normalized.includes("```")) return undefined;
 
   return ["```suggestion:-0+0", normalized, "```"].join("\n");

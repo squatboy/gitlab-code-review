@@ -28,7 +28,7 @@ This project does not run a separate review server. Instead, each GitLab reposit
 
 - Reads MR metadata, latest diff version, and changed files via GitLab API.
 - Maps only commentable **added lines** for inline review comments.
-- Adds GitLab single-line suggestion blocks to added-line comments when Gemini returns a safe replacement line.
+- Adds GitLab suggestion blocks to added-line comments when Gemini returns safe replacement code for the current added line.
 - Reads bounded local workspace context around changed files to improve diff understanding.
 - Generates a structured review result from Gemini with MR-level **code summary**, actionable line-level findings, and review limitations/notes.
 - Creates MR draft notes (summary + line comments).
@@ -175,7 +175,8 @@ Notes:
 - If a summary note already exists for the same `head_sha`, skip with `duplicate_head_sha`.
 - If `AI_REVIEW_FORCE=true`, review the same `head_sha` again.
 - Write line comments only on added lines.
-- Attach single-line suggestions only to added-line comments when an exact replacement line is available.
+- Attach suggestions only to added-line comments when exact replacement code is available for the current added line.
+- Suggestion replacement code may contain multiple lines, but multi-line source range replacement is out of scope.
 - Do not comment on deleted lines, context lines, or multi-line ranges.
 - Do not block the pipeline when AI review fails.
 - Always write the execution result to the `ai-review-result.json` artifact.

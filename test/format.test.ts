@@ -46,7 +46,7 @@ describe("formatSummaryNote", () => {
 });
 
 describe("formatFindingNote", () => {
-  it("renders a GitLab suggestion block for a single-line suggestion", () => {
+  it("renders a GitLab suggestion block for a replacement suggestion", () => {
     const note = formatFindingNote(
       {
         path: "src/app.ts",
@@ -60,6 +60,31 @@ describe("formatFindingNote", () => {
     );
 
     expect(note).toContain("```suggestion:-0+0\nreturn computed;\n```");
+  });
+
+  it("renders multi-line replacement code in a GitLab suggestion block", () => {
+    const note = formatFindingNote(
+      {
+        path: "src/app.ts",
+        line: 10,
+        severity: "major",
+        title: "Validate before returning",
+        body: "The changed line can return invalid data.",
+        suggestion: "if (!computed) {\n  throw new Error(\"computed is required\");\n}\nreturn computed;"
+      },
+      "abc123"
+    );
+
+    expect(note).toContain(
+      [
+        "```suggestion:-0+0",
+        "if (!computed) {",
+        "  throw new Error(\"computed is required\");",
+        "}",
+        "return computed;",
+        "```"
+      ].join("\n")
+    );
   });
 
   it("keeps leading indentation in suggestion blocks", () => {
@@ -78,20 +103,45 @@ describe("formatFindingNote", () => {
     expect(note).toContain("```suggestion:-0+0\n  return computed;\n```");
   });
 
-  it("does not render empty, multi-line, or fenced suggestions", () => {
-    const findings = ["", "   ", "return one;\nreturn two;", "```ts\nreturn computed;\n```"].map(
-      (suggestion) =>
-        formatFindingNote(
-          {
-            path: "src/app.ts",
-            line: 10,
-            severity: "major",
-            title: "Return the computed value",
-            body: "The changed line returns the wrong value.",
-            suggestion
-          },
-          "abc123"
-        )
+  it("preserves indentation, internal blank lines, and normalizes CRLF in multi-line suggestions", () => {
+    const note = formatFindingNote(
+      {
+        path: "src/app.ts",
+        line: 10,
+        severity: "major",
+        title: "Return the computed value",
+        body: "The changed line returns the wrong value.",
+        suggestion: "  if (!computed) {\r\n    return fallback;\r\n  }\r\n\r\n  return computed;"
+      },
+      "abc123"
+    );
+
+    expect(note).toContain(
+      [
+        "```suggestion:-0+0",
+        "  if (!computed) {",
+        "    return fallback;",
+        "  }",
+        "",
+        "  return computed;",
+        "```"
+      ].join("\n")
+    );
+  });
+
+  it("does not render empty, whitespace-only, or fenced suggestions", () => {
+    const findings = ["", "   ", "```ts\nreturn computed;\n```"].map((suggestion) =>
+      formatFindingNote(
+        {
+          path: "src/app.ts",
+          line: 10,
+          severity: "major",
+          title: "Return the computed value",
+          body: "The changed line returns the wrong value.",
+          suggestion
+        },
+        "abc123"
+      )
     );
 
     for (const note of findings) {
