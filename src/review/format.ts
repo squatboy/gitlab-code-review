@@ -67,11 +67,23 @@ export function formatFindingNote(finding: ReviewFinding, headSha: string): stri
     finding.body
   ];
 
-  if (finding.suggestion) {
-    parts.push("", finding.suggestion);
+  const suggestionBlock = formatSuggestionBlock(finding.suggestion);
+  if (suggestionBlock) {
+    parts.push("", suggestionBlock);
   }
 
   return parts.join("\n");
+}
+
+export function formatSuggestionBlock(suggestion?: string): string | undefined {
+  if (!suggestion) return undefined;
+
+  const normalized = suggestion.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  if (normalized.trim().length === 0) return undefined;
+  if (normalized.includes("\n")) return undefined;
+  if (normalized.includes("```")) return undefined;
+
+  return ["```suggestion:-0+0", normalized, "```"].join("\n");
 }
 
 export function formatPolicyNote(params: {

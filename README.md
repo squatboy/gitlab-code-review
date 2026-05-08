@@ -24,6 +24,22 @@ This project does not run a separate review server. Instead, each GitLab reposit
 <br>
 <img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/24ed4f08-2ec6-4b39-b72b-ee6a108e3987" />
 
+## Features
+
+- Reads MR metadata, latest diff version, and changed files via GitLab API.
+- Maps only commentable **added lines** for inline review comments.
+- Adds GitLab single-line suggestion blocks to added-line comments when Gemini returns a safe replacement line.
+- Reads bounded local workspace context around changed files to improve diff understanding.
+- Generates a structured review result from Gemini with MR-level **code summary**, actionable line-level findings, and review limitations/notes.
+- Creates MR draft notes (summary + line comments).
+- Prevents duplicate reviews on the same `head_sha` by default, with optional override via `AI_REVIEW_FORCE=true`.
+- Performs stale `head_sha` checks before posting/publishing to avoid outdated comments.
+- Handles large MRs with policy-based behavior: normal line review within limits, summary-only mode on soft-limit overflow, and hard skip on hard-limit overflow.
+- Filters non-reviewable files (lock/generated/binary/build outputs, etc.) to reduce noise.
+- Supports composable **rule packs**: `default` (always applied), `spring`, `node-express`, `react-nextjs`, `python-django-fastapi`, `nestjs`, `go-gin-echo`, `vue-nuxt`.
+- Supports comment-volume controls with `AI_REVIEW_MAX_COMMENTS` and `AI_REVIEW_MAX_COMMENTS_PER_FILE`.
+- Keeps review non-blocking (`allow_failure: true`) so pipeline progress is not blocked by AI outages.
+- Always writes a run artifact (`ai-review-result.json`) for traceability.
 
 ## Execution Flow
 
@@ -159,6 +175,7 @@ Notes:
 - If a summary note already exists for the same `head_sha`, skip with `duplicate_head_sha`.
 - If `AI_REVIEW_FORCE=true`, review the same `head_sha` again.
 - Write line comments only on added lines.
+- Attach single-line suggestions only to added-line comments when an exact replacement line is available.
 - Do not comment on deleted lines, context lines, or multi-line ranges.
 - Do not block the pipeline when AI review fails.
 - Always write the execution result to the `ai-review-result.json` artifact.

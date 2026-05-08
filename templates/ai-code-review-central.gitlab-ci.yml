@@ -1,6 +1,9 @@
+variables:
+  AI_CODE_REVIEW_IMAGE: "ghcr.io/squatboy/gitlab-code-review:v0.0.0
+
 ai-code-review:
   stage: test
-  image: ghcr.io/squatboy/gitlab-code-review:v0.0.0
+  image: "$AI_CODE_REVIEW_IMAGE"
   variables:
     AI_REVIEW_ENABLED: "true"
     AI_REVIEW_FORCE: "false"

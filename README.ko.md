@@ -24,6 +24,22 @@ GitLab Merge Request pipeline에서 Job으로 실행되는 AI 코드 리뷰.
 <br>
 <img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/24ed4f08-2ec6-4b39-b72b-ee6a108e3987" />
 
+## Features
+- GitLab API를 통한 MR 메타데이터, 최신 diff 버전, 변경 파일 조회
+- 인라인 리뷰 코멘트 작성을 위한 코멘트 가능한 추가 라인(added lines) 만 매핑
+- 안전한 교체 라인이 있을 때 added-line comment에 GitLab single-line suggestion block 추가
+- diff 이해도 향상을 위한 변경 파일 주변 제한된 로컬 워크스페이스 컨텍스트 조회
+- Gemini 기반 MR 수준의 코드 요약(code summary), 실행 가능한 라인 단위 지적 사항, 리뷰 제한/노트 포함 구조화 결과 생성
+- MR draft note(요약 + 라인 코멘트) 생성
+- 기본 동작: 동일 head_sha 중복 리뷰 방지 / 선택 동작: AI_REVIEW_FORCE=true 시 재리뷰 허용
+- 오래된 코멘트 방지를 위한 posting/publishing 전 stale head_sha 검사
+- 대규모 MR 정책 기반 처리: 한도 내 일반 라인 리뷰, soft-limit 초과 시 summary-only 모드, hard-limit 초과 시 hard skip
+- 노이즈 감소를 위한 리뷰 제외 파일(lock/generated/binary/build outputs 등) 필터링
+- 언어/프레임워크에 따라 조합할 수 있는 rule pack 지원: default(항상 적용), spring, node-express, react-nextjs, python-django-fastapi, nestjs, go-gin-echo, vue-nuxt
+- AI_REVIEW_MAX_COMMENTS, AI_REVIEW_MAX_COMMENTS_PER_FILE 기반 코멘트 볼륨 제어
+- non-blocking 리뷰(allow_failure: true) 유지로 AI 장애 시에도 파이프라인 진행 차단 방지
+- 추적성 확보를 위한 실행 artifact(ai-review-result.json) 상시 기록
+
 
 ## 동작 흐름
 
@@ -156,6 +172,7 @@ AI_REVIEW_API_KEY
 - 같은 `head_sha`에 이미 summary note가 있으면 `duplicate_head_sha`로 스킵한다.
 - `AI_REVIEW_FORCE=true`면 같은 `head_sha`도 다시 리뷰한다.
 - line comment는 added line에만 작성한다.
+- 정확한 단일 교체 라인이 있을 때만 added-line comment에 suggestion을 첨부한다.
 - 삭제 line, context line, multi-line range에는 comment하지 않는다.
 - AI 리뷰 실패는 pipeline을 막지 않는다.
 - 실행 결과는 항상 `ai-review-result.json` artifact로 남긴다.

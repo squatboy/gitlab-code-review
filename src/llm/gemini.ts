@@ -118,6 +118,9 @@ export function buildPrompt(input: ReviewInput): string {
     "Only report actionable issues. Do not praise, nitpick, or comment on style preferences.",
     "Allowed severities are critical, major, minor, nit. Do not return nit findings unless the issue is objectively important.",
     "Line findings must point only to added lines listed in each file. If unsure, put the concern in summary instead.",
+    "For finding.suggestion, return only a single-line replacement for the exact added line.",
+    "Do not include Markdown fences, explanation text, or multiple lines in finding.suggestion.",
+    "Omit finding.suggestion when the exact single-line replacement is uncertain.",
     `Apply these rule packs: ${appliedRulePacks.join(", ")}.`,
     ...rulePackLines,
     input.summaryOnly
