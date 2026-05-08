@@ -20,9 +20,12 @@ This project does not run a separate review server. Instead, each GitLab reposit
 
 ## Preview
 
-<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/814dc552-143d-4c41-986c-ceef75d04ae0" />
+<img width="1771" height="1032" alt="image" src="https://github.com/user-attachments/assets/6ac261eb-ff8e-4509-ae14-2667a1109d33" />
 <br>
-<img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/24ed4f08-2ec6-4b39-b72b-ee6a108e3987" />
+<img width="1771" height="1032" alt="image" src="https://github.com/user-attachments/assets/40b89a3a-c86d-48c9-b597-87539ef4b2a8" />
+<br>
+<img width="1771" height="1032" alt="image" src="https://github.com/user-attachments/assets/06db2dd9-c13c-4450-9ccb-39725171f614" />
+
 
 ## Features
 
@@ -75,7 +78,9 @@ Execution path for `script: ai-code-review`:
 - Source entrypoint `src/cli.ts`
 - Review execution logic `src/review/runner.ts`
 
-## GitLab CI Setup
+## Get Started
+
+### GitLab CI Setup
 
 Add the following job to `.gitlab-ci.yml` in the target repository.
 
@@ -110,7 +115,7 @@ ai-code-review:
 
 > `tags: ` option is required in the environment where the gitlab runner not accepting untagged jobs. 
 
-## GitLab CI Variables
+### GitLab CI Variables
 
 Register these variables as group-level variables by default.
 
@@ -137,7 +142,7 @@ AI_REVIEW_API_KEY
 - Raw Gemini API key
 - Recommended GitLab CI variable settings: masked/hidden
 
-## Configuration
+### Configuration
 
 | Variable | Default | Description |
 | --- | --- | --- |
