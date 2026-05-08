@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "GitLab MR AI code review CLI for CI pipelines",
   "type": "module",
+  "packageManager": "pnpm@10.33.2",
   "bin": {
     "ai-code-review": "./dist/cli.js"
   },
@@ -29,5 +30,10 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.2",
     "vitest": "^4.1.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
