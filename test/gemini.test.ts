@@ -23,6 +23,13 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("Rule pack (spring):");
   });
 
+  it("requests separate code and review summaries", () => {
+    const prompt = buildPrompt(baseInput);
+
+    expect(prompt).toContain("Use codeSummary to summarize what changed in the MR code");
+    expect(prompt).toContain("Use summary for review-oriented risk");
+  });
+
   it("ignores unknown packs in prompt composition", () => {
     const prompt = buildPrompt({
       ...baseInput,

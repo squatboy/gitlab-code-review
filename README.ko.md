@@ -16,6 +16,8 @@ GitLab Merge Request pipeline에서 Job으로 실행되는 AI 코드 리뷰.
 
 별도 리뷰 서버를 두지 않고, 각 GitLab repository의 MR pipeline job이 Docker image를 pull한 뒤 `ai-code-review` CLI를 실행한다. CLI는 GitLab API로 MR 변경 내용을 읽고 Gemini에 리뷰를 요청한 뒤, MR summary note와 added line comment를 GitLab에 작성한다.
 
+> 현재 사용중인 모델 : Gemini 3.1 Flash Lite model - 무료 토큰 제한이 높고, 빠르고 경량화 모델 중 성능이 우수함.
+
 ## Preview
 
 <img width="1767" height="1032" alt="image" src="https://github.com/user-attachments/assets/814dc552-143d-4c41-986c-ceef75d04ae0" />

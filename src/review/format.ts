@@ -11,11 +11,12 @@ export function findingMarker(finding: ReviewFinding, headSha: string): string {
 
 export function formatSummaryNote(params: {
   input: ReviewInput;
+  codeSummary: string[];
   summary: string[];
   findings: ReviewFinding[];
   rejectedFindings: number;
 }): string {
-  const { input, summary, findings, rejectedFindings } = params;
+  const { input, codeSummary, summary, findings, rejectedFindings } = params;
   const lines = [
     summaryMarker(input.projectId, input.mergeRequestIid, input.headSha),
     "",
@@ -29,8 +30,12 @@ export function formatSummaryNote(params: {
     `- Discarded findings: ${rejectedFindings}`
   ];
 
+  if (codeSummary.length > 0) {
+    lines.push("", "### Code summary", ...codeSummary.map((item) => `- ${item}`));
+  }
+
   if (summary.length > 0) {
-    lines.push("", "### Summary", ...summary.map((item) => `- ${item}`));
+    lines.push("", "### Review", ...summary.map((item) => `- ${item}`));
   }
 
   if (findings.length > 0) {

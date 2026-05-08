@@ -12,6 +12,7 @@ const findingSchema = z.object({
 });
 
 const reviewResponseSchema = z.object({
+  codeSummary: z.array(z.string()).default([]),
   summary: z.array(z.string()).default([]),
   findings: z.array(findingSchema).default([]),
   limitations: z.array(z.string()).optional()
@@ -20,6 +21,10 @@ const reviewResponseSchema = z.object({
 const geminiResponseSchema = {
   type: "OBJECT",
   properties: {
+    codeSummary: {
+      type: "ARRAY",
+      items: { type: "STRING" }
+    },
     summary: {
       type: "ARRAY",
       items: { type: "STRING" }
@@ -48,8 +53,8 @@ const geminiResponseSchema = {
       items: { type: "STRING" }
     }
   },
-  required: ["summary", "findings"],
-  propertyOrdering: ["summary", "findings", "limitations"]
+  required: ["codeSummary", "summary", "findings"],
+  propertyOrdering: ["codeSummary", "summary", "findings", "limitations"]
 };
 
 export class GeminiProvider {
@@ -108,13 +113,15 @@ export function buildPrompt(input: ReviewInput): string {
     "You are an AI code reviewer for GitLab Merge Requests.",
     "Return only JSON that matches the provided schema.",
     `Write review output in ${input.language}. Keep code identifiers, paths, API names, and errors unchanged.`,
+    "Use codeSummary to summarize what changed in the MR code and what the changed code does.",
+    "Use summary for review-oriented risk, behavior, and verification notes.",
     "Only report actionable issues. Do not praise, nitpick, or comment on style preferences.",
     "Allowed severities are critical, major, minor, nit. Do not return nit findings unless the issue is objectively important.",
     "Line findings must point only to added lines listed in each file. If unsure, put the concern in summary instead.",
     `Apply these rule packs: ${appliedRulePacks.join(", ")}.`,
     ...rulePackLines,
     input.summaryOnly
-      ? "This MR is over the normal line-review limit. Return summary only and no line findings."
+      ? "This MR is over the normal line-review limit. Return codeSummary and summary only, and no line findings."
       : "Return at most the most important actionable line findings.",
     "",
     JSON.stringify(input)

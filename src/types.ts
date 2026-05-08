@@ -10,6 +10,7 @@ export interface ReviewFinding {
 }
 
 export interface ReviewResponse {
+  codeSummary: string[];
   summary: string[];
   findings: ReviewFinding[];
   limitations?: string[];

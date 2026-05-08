@@ -150,6 +150,7 @@ async function executeReview(config: AppConfig, result: AiReviewResult): Promise
     gitlab,
     version,
     reviewInput,
+    codeSummary: response.codeSummary,
     summary: response.summary,
     findings: filterResult.accepted,
     rejectedFindings: filterResult.rejectedCount
@@ -219,6 +220,7 @@ async function createDraftNotes(params: {
     excludedFiles: string[];
     limits: string[];
   };
+  codeSummary: string[];
   summary: string[];
   findings: ReviewFinding[];
   rejectedFindings: number;
@@ -238,6 +240,7 @@ async function createDraftNotes(params: {
         addedLines: []
       }))
     },
+    codeSummary: params.codeSummary,
     summary: params.summary,
     findings: params.findings,
     rejectedFindings: params.rejectedFindings
