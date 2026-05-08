@@ -40,7 +40,7 @@ describe("formatSummaryNote", () => {
     });
 
     expect(note).toContain("### Code summary\n- Adds validation before saving users.");
-    expect(note).toContain("### Review\n - Missing tests for the new validation path.");
+    expect(note).toContain("### Review\n- Missing tests for the new validation path.");
     expect(note).toContain("### Key findings\n- `src/app.ts:10` Validation error is not handled");
   });
 });
