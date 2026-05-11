@@ -5,7 +5,7 @@ export function summaryMarker(projectId: string, mrIid: string, headSha: string)
 }
 
 export function findingMarker(finding: ReviewFinding, headSha: string): string {
-  const fingerprint = `${finding.path}:${finding.line}:${finding.severity}:${finding.title}`;
+  const fingerprint = `${finding.path}:${formatFindingRange(finding)}:${finding.severity}:${finding.title}`;
   return `<!-- ai-code-review:finding fingerprint=${Buffer.from(fingerprint).toString("base64url")} head_sha=${headSha} -->`;
 }
 
@@ -42,7 +42,7 @@ export function formatSummaryNote(params: {
     lines.push(
       "",
       "### Key findings",
-      ...findings.map((finding) => `- \`${finding.path}:${finding.line}\` ${finding.title}`)
+      ...findings.map((finding) => `- \`${finding.path}:${formatFindingRange(finding)}\` ${finding.title}`)
     );
   }
 
@@ -67,7 +67,7 @@ export function formatFindingNote(finding: ReviewFinding, headSha: string): stri
     finding.body
   ];
 
-  const suggestionBlock = formatSuggestionBlock(finding.suggestion);
+  const suggestionBlock = formatSuggestionBlock(finding);
   if (suggestionBlock) {
     parts.push("", suggestionBlock);
   }
@@ -75,14 +75,19 @@ export function formatFindingNote(finding: ReviewFinding, headSha: string): stri
   return parts.join("\n");
 }
 
-export function formatSuggestionBlock(suggestion?: string): string | undefined {
-  if (!suggestion) return undefined;
+export function formatSuggestionBlock(
+  finding: Pick<ReviewFinding, "line" | "endLine" | "suggestion">
+): string | undefined {
+  if (!finding.suggestion) return undefined;
 
-  const normalized = suggestion.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const normalized = finding.suggestion.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   if (normalized.trim().length === 0) return undefined;
   if (normalized.includes("```")) return undefined;
 
-  return ["```suggestion:-0+0", normalized, "```"].join("\n");
+  const rangeLength = getFindingRangeLength(finding);
+  if (!rangeLength) return undefined;
+
+  return [`\`\`\`suggestion:-0+${rangeLength - 1}`, normalized, "```"].join("\n");
 }
 
 export function formatPolicyNote(params: {
@@ -103,4 +108,15 @@ export function formatPolicyNote(params: {
     "### Reasons",
     ...params.reasons.map((reason) => `- ${reason}`)
   ].join("\n");
+}
+
+function getFindingRangeLength(finding: Pick<ReviewFinding, "line" | "endLine">): number | undefined {
+  const endLine = finding.endLine ?? finding.line;
+  if (endLine < finding.line) return undefined;
+  return endLine - finding.line + 1;
+}
+
+function formatFindingRange(finding: Pick<ReviewFinding, "line" | "endLine">): string {
+  const endLine = finding.endLine ?? finding.line;
+  return endLine > finding.line ? `${finding.line}-${endLine}` : String(finding.line);
 }

@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { assertRunnableConfig, isDraftTitle, isSameProjectMr, type AppConfig } from "../config.js";
 import { GitLabClient } from "../gitlab/client.js";
-import { buildAddedLineMap } from "../gitlab/diff.js";
+import { buildAddedLineCodeMap, buildAddedLineMap } from "../gitlab/diff.js";
 import { GeminiProvider } from "../llm/gemini.js";
 import type { AiReviewResult, DiffPosition, ReviewFinding } from "../types.js";
 import { filterFindings } from "./filter.js";
@@ -133,6 +133,7 @@ async function executeReview(config: AppConfig, result: AiReviewResult): Promise
   const response = await provider.review(reviewInput);
 
   const addedLineMap = buildAddedLineMap(diffs);
+  const addedLineCodeMap = buildAddedLineCodeMap(diffs);
   const filterResult = filterFindings(
     response.findings,
     addedLineMap,
@@ -153,7 +154,8 @@ async function executeReview(config: AppConfig, result: AiReviewResult): Promise
     codeSummary: response.codeSummary,
     summary: response.summary,
     findings: filterResult.accepted,
-    rejectedFindings: filterResult.rejectedCount
+    rejectedFindings: filterResult.rejectedCount,
+    addedLineCodeMap
   });
   result.postedDraftNoteIds = draftNoteIds;
 
@@ -224,6 +226,7 @@ async function createDraftNotes(params: {
   summary: string[];
   findings: ReviewFinding[];
   rejectedFindings: number;
+  addedLineCodeMap: Map<string, Map<number, string>>;
 }): Promise<number[]> {
   const draftNoteIds: number[] = [];
   const fileByPath = new Map(params.reviewInput.files.map((file) => [file.path, file]));
@@ -261,6 +264,10 @@ async function createDraftNotes(params: {
       position_type: "text",
       new_line: finding.line
     };
+    const lineRange = buildLineRange(finding, params.addedLineCodeMap.get(finding.path));
+    if (lineRange) {
+      position.line_range = lineRange;
+    }
 
     draftNoteIds.push(
       await params.gitlab.createDraftNote(formatFindingNote(finding, params.reviewInput.headSha), position)
@@ -268,4 +275,29 @@ async function createDraftNotes(params: {
   }
 
   return draftNoteIds;
+}
+
+function buildLineRange(
+  finding: ReviewFinding,
+  lineCodeByNewLine?: Map<number, string>
+): DiffPosition["line_range"] | undefined {
+  const endLine = finding.endLine;
+  if (endLine === undefined || endLine <= finding.line || !lineCodeByNewLine) return undefined;
+
+  const startLineCode = lineCodeByNewLine.get(finding.line);
+  const endLineCode = lineCodeByNewLine.get(endLine);
+  if (!startLineCode || !endLineCode) return undefined;
+
+  return {
+    start: {
+      line_code: startLineCode,
+      type: "new",
+      new_line: finding.line
+    },
+    end: {
+      line_code: endLineCode,
+      type: "new",
+      new_line: endLine
+    }
+  };
 }

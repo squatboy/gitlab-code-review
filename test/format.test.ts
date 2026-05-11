@@ -43,6 +43,27 @@ describe("formatSummaryNote", () => {
     expect(note).toContain("### Review\n- Missing tests for the new validation path.");
     expect(note).toContain("### Key findings\n- `src/app.ts:10` Validation error is not handled");
   });
+
+  it("renders range labels for multi-line findings", () => {
+    const note = formatSummaryNote({
+      input,
+      codeSummary: [],
+      summary: [],
+      findings: [
+        {
+          path: "src/app.ts",
+          line: 10,
+          endLine: 12,
+          severity: "major",
+          title: "Validation range issue",
+          body: "A block-level issue was found."
+        }
+      ],
+      rejectedFindings: 0
+    });
+
+    expect(note).toContain("### Key findings\n- `src/app.ts:10-12` Validation range issue");
+  });
 });
 
 describe("formatFindingNote", () => {
@@ -148,5 +169,22 @@ describe("formatFindingNote", () => {
       expect(note).not.toContain("```suggestion:-0+0");
       expect(note).toContain("The changed line returns the wrong value.");
     }
+  });
+
+  it("uses a range-aware suggestion fence for multi-line findings", () => {
+    const note = formatFindingNote(
+      {
+        path: "src/app.ts",
+        line: 20,
+        endLine: 22,
+        severity: "major",
+        title: "Replace the full conditional block",
+        body: "The block is unsafe and should be replaced.",
+        suggestion: "if (!isAuthorized(user)) {\n  return deny();\n}\nreturn allow();"
+      },
+      "abc123"
+    );
+
+    expect(note).toContain("```suggestion:-0+2");
   });
 });

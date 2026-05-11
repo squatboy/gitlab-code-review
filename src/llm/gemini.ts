@@ -5,10 +5,14 @@ import { buildRulePackPromptLines, resolveRulePacks } from "../review/rule-packs
 const findingSchema = z.object({
   path: z.string(),
   line: z.number().int().positive(),
+  endLine: z.number().int().positive().optional(),
   severity: z.enum(["critical", "major", "minor", "nit"]),
   title: z.string(),
   body: z.string(),
   suggestion: z.string().optional()
+}).refine((finding) => finding.endLine === undefined || finding.endLine >= finding.line, {
+  message: "endLine must be greater than or equal to line",
+  path: ["endLine"]
 });
 
 const reviewResponseSchema = z.object({
@@ -36,6 +40,7 @@ const geminiResponseSchema = {
         properties: {
           path: { type: "STRING" },
           line: { type: "INTEGER" },
+          endLine: { type: "INTEGER" },
           severity: {
             type: "STRING",
             enum: ["critical", "major", "minor", "nit"]
@@ -45,7 +50,7 @@ const geminiResponseSchema = {
           suggestion: { type: "STRING" }
         },
         required: ["path", "line", "severity", "title", "body"],
-        propertyOrdering: ["path", "line", "severity", "title", "body", "suggestion"]
+        propertyOrdering: ["path", "line", "endLine", "severity", "title", "body", "suggestion"]
       }
     },
     limitations: {
@@ -118,8 +123,11 @@ export function buildPrompt(input: ReviewInput): string {
     "Only report actionable issues. Do not praise, nitpick, or comment on style preferences.",
     "Allowed severities are critical, major, minor, nit. Do not return nit findings unless the issue is objectively important.",
     "Line findings must point only to added lines listed in each file. If unsure, put the concern in summary instead.",
-    "For finding.suggestion, return only replacement code for the exact added line.",
-    "finding.suggestion may contain multiple replacement code lines, but it must still replace only the current added line.",
+    "Use finding.line as the start line of the issue. Set finding.endLine only when the issue spans multiple contiguous added lines.",
+    "If finding.endLine is set, every line from finding.line to finding.endLine must exist in file.addedLines.",
+    "For finding.suggestion, return the full replacement code block needed to fix the issue around the reported line.",
+    "If finding.endLine is set, finding.suggestion must replace the full range from finding.line to finding.endLine.",
+    "Do not limit finding.suggestion to a single line; include all required lines when a block-level change is needed.",
     "Do not include Markdown fences or explanation text in finding.suggestion.",
     "Omit finding.suggestion when the exact replacement code is uncertain.",
     `Apply these rule packs: ${appliedRulePacks.join(", ")}.`,

@@ -3,6 +3,7 @@ export type Severity = "critical" | "major" | "minor" | "nit";
 export interface ReviewFinding {
   path: string;
   line: number;
+  endLine?: number;
   severity: Severity;
   title: string;
   body: string;
@@ -89,5 +90,19 @@ export interface DiffPosition {
   old_path: string;
   new_path: string;
   position_type: "text";
-  new_line: number;
+  old_line?: number;
+  new_line?: number;
+  line_range?: DiffLineRange;
+}
+
+export interface DiffLineRangePoint {
+  line_code: string;
+  type: "new" | "old";
+  old_line?: number;
+  new_line?: number;
+}
+
+export interface DiffLineRange {
+  start: DiffLineRangePoint;
+  end: DiffLineRangePoint;
 }

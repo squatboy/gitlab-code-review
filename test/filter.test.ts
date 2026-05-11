@@ -49,4 +49,57 @@ describe("filterFindings", () => {
     expect(result.accepted).toEqual([]);
     expect(result.rejectedCount).toBe(4);
   });
+
+  it("accepts multi-line findings only when the full range is added lines", () => {
+    const result = filterFindings(
+      [
+        {
+          path: "src/UserService.java",
+          line: 10,
+          endLine: 11,
+          severity: "major",
+          title: "Multi-line transaction issue",
+          body: "The transaction boundary spans multiple changed lines."
+        }
+      ],
+      new Map([["src/UserService.java", new Set([10, 11])]]),
+      10,
+      3,
+      false
+    );
+
+    expect(result.accepted).toEqual([
+      {
+        path: "src/UserService.java",
+        line: 10,
+        endLine: 11,
+        severity: "major",
+        title: "Multi-line transaction issue",
+        body: "The transaction boundary spans multiple changed lines."
+      }
+    ]);
+    expect(result.rejectedCount).toBe(0);
+  });
+
+  it("rejects multi-line findings if any line in the range is not commentable", () => {
+    const result = filterFindings(
+      [
+        {
+          path: "src/UserService.java",
+          line: 10,
+          endLine: 12,
+          severity: "major",
+          title: "Multi-line transaction issue",
+          body: "The transaction boundary spans multiple changed lines."
+        }
+      ],
+      new Map([["src/UserService.java", new Set([10, 11])]]),
+      10,
+      3,
+      false
+    );
+
+    expect(result.accepted).toEqual([]);
+    expect(result.rejectedCount).toBe(1);
+  });
 });
